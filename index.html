@@ -2,53 +2,23 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>고양이 음수량 계산기</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
-    input {
-      margin: 5px 0;
-      padding: 8px;
-      width: 100%;
-      font-size: 16px;
-    }
-    button {
-      padding: 10px;
-      width: 100%;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 16px;
-      border: none;
-      margin-top: 10px;
-    }
-    #result {
-      margin-top: 20px;
-      font-weight: bold;
-      font-size: 18px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>정춉의 음수량 계산기</title>
 </head>
 <body>
-  <h2>정춉 음수량</h2>
+  <h2>정춉이 마신 물 계산기</h2>
 
   <label for="hhmm">경과 시간 (HHMM):</label>
-  <input type="text" id="hhmm" placeholder="예: 1830" />
+  <input type="text" id="hhmm" placeholder="예: 1830" /><br /><br />
 
-  <label for="water1">그릇 1(mL):</label>
-  <input type="number" id="water1" placeholder="예: 100" />
+  <label for="water_v05">줄어든 물 1 (v=0.05, mL):</label>
+  <input type="number" id="water_v05" placeholder="예: 100" /><br /><br />
 
-  <label for="water2">그릇 2 (mL):</label>
-  <input type="number" id="water2" placeholder="예: 70" />
+  <label for="water_v20">줄어든 물 2 (v=0.2, mL):</label>
+  <input type="number" id="water_v20" placeholder="예: 100" /><br /><br />
 
-  <label for="water3">그릇 3 (mL):</label>
-  <input type="number" id="water3" placeholder="예: 50" />
-
-  <button onclick="calculate()">계산</button>
-
-  <div id="result"></div>
+  <button onclick="calculate()">계산하기</button>
+  <p id="result"></p>
 
   <script>
     function calculate() {
@@ -63,28 +33,32 @@
       const minutes = parseInt(hhmmStr.slice(2), 10);
       const totalTime = hours + minutes / 60;
 
-      const water1 = parseFloat(document.getElementById("water1").value) || 0;
-      const water2 = parseFloat(document.getElementById("water2").value) || 0;
-      const water3 = parseFloat(document.getElementById("water3").value) || 0;
+      const A = 0.00785; // 지름 10cm 물 표면적 (π * r^2)
+      const humidityDiff = 0.012; // Xs - X
 
-      const bowlInputs = [water1, water2, water3];
-      const validWaters = bowlInputs.filter(val => val > 0);
-      const totalLoss = validWaters.reduce((sum, val) => sum + val, 0);
-      const bowlCount = validWaters.length;
+      const inputs = [
+        { id: "water_v05", v: 0.05 },
+        { id: "water_v20", v: 0.2 },
+      ];
 
-      if (totalTime <= 0 || bowlCount === 0 || totalLoss <= 0) {
-        document.getElementById("result").innerText =
-          "시간과 물 줄어든 양을 올바르게 입력해주세요.";
-        return;
+      let totalLoss = 0;
+      let totalEvap = 0;
+
+      for (const { id, v } of inputs) {
+        const loss = parseFloat(document.getElementById(id).value);
+        if (!isNaN(loss) && loss > 0) {
+          const gh = (25 + 19 * v) * A * humidityDiff; // mL/h
+          const evap = gh * totalTime;
+          totalLoss += loss;
+          totalEvap += evap;
+        }
       }
 
-      const evapPerBowlPerHour = 14.4 / 19; // mL/h
-      const totalEvap = evapPerBowlPerHour * totalTime * bowlCount;
-      const drinkAmount = totalLoss - totalEvap;
-      const final = Math.max(0, Math.round(drinkAmount * 10) / 10);
+      const drink = totalLoss - totalEvap;
+      const result = Math.max(0, Math.round(drink * 10) / 10);
 
       document.getElementById("result").innerText =
-        `춉이가 마신 물: 약 ${final}mL`;
+        `정춉이 마신 물의 양은 약 ${result}mL 입니다.`;
     }
   </script>
 </body>
