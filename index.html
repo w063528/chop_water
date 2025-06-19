@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>정춉의 음수량 계산기</title>
+  <title>정춉의 음수량</title>
 </head>
 <body>
   <h2>정춉이 마신 물 계산기</h2>
 
   <label for="hhmm">경과 시간 (HHMM):</label>
-  <input type="text" id="hhmm" placeholder="예: 1830" /><br /><br />
+  <input type="text" id="hhmm" value="1000" /><br /><br />
 
-  <label for="water_v05">줄어든 물 1 (v=0.05, mL):</label>
-  <input type="number" id="water_v05" placeholder="예: 100" /><br /><br />
+  <label for="water_v05">물 1 (v=0.05, mL):</label>
+  <input type="number" id="water_v05" value="100" /><br /><br />
 
-  <label for="water_v20">줄어든 물 2 (v=0.2, mL):</label>
-  <input type="number" id="water_v20" placeholder="예: 100" /><br /><br />
+  <label for="water_v20">물 2 (v=0.2, mL):</label>
+  <input type="number" id="water_v20" value="10" /><br /><br />
 
   <button onclick="calculate()">계산하기</button>
   <p id="result"></p>
@@ -23,18 +23,13 @@
   <script>
     function calculate() {
       const hhmmRaw = document.getElementById("hhmm").value.trim();
-      if (!/^\d{3,4}$/.test(hhmmRaw)) {
-        document.getElementById("result").innerText = "경과 시간을 HHMM 형식으로 입력해주세요.";
-        return;
-      }
-
       const hhmmStr = hhmmRaw.padStart(4, '0');
       const hours = parseInt(hhmmStr.slice(0, 2), 10);
       const minutes = parseInt(hhmmStr.slice(2), 10);
       const totalTime = hours + minutes / 60;
 
-      const A = 0.00785; // 지름 10cm 물 표면적 (π * r^2)
-      const humidityDiff = 0.012; // Xs - X
+      const A = 0.00785; // m², 지름 10cm
+      const humidityDiff = 0.012;
 
       const inputs = [
         { id: "water_v05", v: 0.05 },
@@ -44,19 +39,20 @@
       let totalLoss = 0;
       let totalEvap = 0;
 
-      for (const { id, v } of inputs) {
-        const loss = parseFloat(document.getElementById(id).value);
-        if (!isNaN(loss) && loss > 0) {
-          const gh = (25 + 19 * v) * A * humidityDiff; // mL/h
-          const evap = gh * totalTime;
-          totalLoss += loss;
+      inputs.forEach(({ id, v }) => {
+        const val = parseFloat(document.getElementById(id).value);
+        if (!isNaN(val) && val > 0) {
+          totalLoss += val;
+
+          const gh = (25 + 19 * v) * A * humidityDiff; // kg/h ≈ mL/h
+          const evap = gh * totalTime * 1000;
+          console.log(`v=${v}: 증발량=${evap.toFixed(2)}mL`);
           totalEvap += evap;
         }
-      }
+      });
 
       const drink = totalLoss - totalEvap;
       const result = Math.max(0, Math.round(drink * 10) / 10);
-
       document.getElementById("result").innerText =
         `정춉이 마신 물의 양은 약 ${result}mL 입니다.`;
     }
