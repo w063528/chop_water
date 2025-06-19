@@ -3,24 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>정춉의 음수량</title>
-</head>
-<body>
-  <h2>정춉이 마신 물 계산기</h2>
-
-  <label for="hhmm">경과 시간 (HHMM):</label>
-  <input type="text" id="hhmm" value="1000" /><br /><br />
-
-  <label for="water_v05">물 1 (v=0.05, mL):</label>
-  <input type="number" id="water_v05" value="100" /><br /><br />
-
-  <label for="water_v20">물 2 (v=0.2, mL):</label>
-  <input type="number" id="water_v20" value="10" /><br /><br />
-
-  <button onclick="calculate()">계산하기</button>
-  <p id="result"></p>
-
+  <title>정춉 마신 물 계산기</title>
   <script>
+    window.onload = () => {
+      // 1. 이전 입력값 초기화
+      ['hhmm', 'water_v05', 'water_v20'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+
+      // 2. hhmm에 자동 커서 / 3. 일부 iOS에서는 setTimeout으로 팝업 유도
+      setTimeout(() => {
+        const hhmm = document.getElementById('hhmm');
+        if (hhmm) hhmm.focus();
+      }, 300);
+    };
+
     function calculate() {
       const hhmmRaw = document.getElementById("hhmm").value.trim();
       const hhmmStr = hhmmRaw.padStart(4, '0');
@@ -43,10 +41,8 @@
         const val = parseFloat(document.getElementById(id).value);
         if (!isNaN(val) && val > 0) {
           totalLoss += val;
-
-          const gh = (25 + 19 * v) * A * humidityDiff; // kg/h ≈ mL/h
-          const evap = gh * totalTime * 1000;
-          console.log(`v=${v}: 증발량=${evap.toFixed(2)}mL`);
+          const gh = (25 + 19 * v) * A * humidityDiff; // kg/h ≈ L/h
+          const evap = gh * totalTime * 1000; // mL
           totalEvap += evap;
         }
       });
@@ -57,5 +53,36 @@
         `정춉이 마신 물의 양은 약 ${result}mL 입니다.`;
     }
   </script>
+  <style>
+    input {
+      font-size: 18px;
+      padding: 6px;
+      margin-bottom: 12px;
+      width: 200px;
+    }
+    button {
+      font-size: 18px;
+      padding: 6px 12px;
+    }
+  </style>
+</head>
+<body>
+  <h2>정춉 마신 물 계산기</h2>
+
+  <!-- 6. return 키로 submit 가능 -->
+  <form onsubmit="calculate(); return false;">
+    <label for="hhmm">경과 시간 (HHMM):</label><br />
+    <input type="tel" id="hhmm" inputmode="numeric" pattern="[0-9]*" tabindex="1" /><br />
+
+    <label for="water_v05">물 1 (v=0.05, mL):</label><br />
+    <input type="tel" id="water_v05" inputmode="numeric" pattern="[0-9]*" tabindex="2" /><br />
+
+    <label for="water_v20">물 2 (v=0.2, mL):</label><br />
+    <input type="tel" id="water_v20" inputmode="numeric" pattern="[0-9]*" tabindex="3" /><br />
+
+    <button type="submit">계산하기</button>
+  </form>
+
+  <p id="result"></p>
 </body>
 </html>
