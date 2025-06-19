@@ -5,50 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>정춉 마신 물 계산기</title>
   <script>
-    window.onload = () => {
-      // 1. 이전 입력값 초기화
-      ['hhmm', 'water_v05', 'water_v20'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-
-      // 2. hhmm에 자동 커서 (자동 키보드 팝업은 iOS 정책상 불가)
-      const hhmm = document.getElementById('hhmm');
-      if (hhmm) hhmm.focus();
-    };
-
-    function calculate() {
-      const hhmmRaw = document.getElementById("hhmm").value.trim();
-      const hhmmStr = hhmmRaw.padStart(4, '0');
+    function validateHHMM(raw) {
+      const hhmmStr = raw.padStart(4, '0');
       const hours = parseInt(hhmmStr.slice(0, 2), 10);
       const minutes = parseInt(hhmmStr.slice(2), 10);
-
       if (isNaN(hours) || isNaN(minutes) || minutes >= 60) {
-        document.getElementById("result").innerText = "⚠️ 분(minute)은 0~59 사이여야 합니다.";
+        document.getElementById("hhmmError").innerText = "HHMM 중 MM은 0~59 사이여야 합니다.";
+        return null;
+      }
+      document.getElementById("hhmmError").innerText = "";
+      return hours + minutes / 60;
+    }
+
+    function calculateIfReady() {
+      const hhmmVal = document.getElementById("hhmm").value.trim();
+      const totalTime = validateHHMM(hhmmVal);
+      const v05 = document.getElementById("water_v05").value;
+      const v20 = document.getElementById("water_v20").value;
+
+      const hasHHMM = totalTime !== null;
+      const hasV05 = v05.trim() !== "";
+      const hasV20 = v20.trim() !== "";
+
+      // 조건 만족 안하면 초기화
+      if (!hasHHMM || (!hasV05 && !hasV20)) {
+        document.getElementById("result").innerText = "";
         return;
       }
 
-      const totalTime = hours + minutes / 60;
       const A = 0.00785; // m², 지름 10cm
       const humidityDiff = 0.012;
-
-      const inputs = [
-        { id: "water_v05", v: 0.05 },
-        { id: "water_v20", v: 0.2 },
-      ];
 
       let totalLoss = 0;
       let totalEvap = 0;
 
-      inputs.forEach(({ id, v }) => {
-        const val = parseFloat(document.getElementById(id).value);
-        if (!isNaN(val) && val > 0) {
+      if (hasV05) {
+        const val = parseFloat(v05);
+        if (!isNaN(val)) {
           totalLoss += val;
-          const gh = (25 + 19 * v) * A * humidityDiff; // kg/h ≈ L/h
-          const evap = gh * totalTime * 1000; // mL
-          totalEvap += evap;
+          const gh = (25 + 19 * 0.05) * A * humidityDiff;
+          totalEvap += gh * totalTime * 1000;
         }
-      });
+      }
+
+      if (hasV20) {
+        const val = parseFloat(v20);
+        if (!isNaN(val)) {
+          totalLoss += val;
+          const gh = (25 + 19 * 0.2) * A * humidityDiff;
+          totalEvap += gh * totalTime * 1000;
+        }
+      }
 
       const drink = totalLoss - totalEvap;
       const result = Math.max(0, Math.round(drink * 10) / 10);
@@ -56,48 +63,52 @@
         `정춉이 마신 물의 양은 약 ${result}mL 입니다.`;
     }
 
-    // 6. iOS "완료" 버튼으로 계산 실행
-    document.addEventListener('DOMContentLoaded', () => {
-      ['hhmm', 'water_v05', 'water_v20'].forEach(id => {
+    window.onload = () => {
+      // 입력 초기화
+      ["hhmm", "water_v05", "water_v20"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+
+      document.getElementById("hhmm").focus();
+
+      // 이벤트 리스너 등록
+      ["hhmm", "water_v05", "water_v20"].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-          el.addEventListener('change', () => {
-            // 사용자가 완료 버튼을 눌렀을 때 계산 수행
-            calculate();
+          el.addEventListener("input", () => {
+            calculateIfReady();
           });
         }
       });
-    });
+    };
   </script>
   <style>
     input {
       font-size: 18px;
       padding: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
       width: 200px;
     }
-    button {
-      font-size: 18px;
-      padding: 6px 12px;
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <h2>정춉 마신 물 계산기</h2>
 
-  <!-- 6. return 키로 submit 가능 -->
-  <form onsubmit="calculate(); return false;">
-    <label for="hhmm">경과 시간 (HHMM):</label><br />
-    <input type="tel" id="hhmm" inputmode="numeric" pattern="[0-9]*" tabindex="1" /><br />
+  <label for="hhmm">경과 시간 (HHMM):</label><br />
+  <input type="tel" id="hhmm" inputmode="numeric" pattern="[0-9]*" tabindex="1" /><br />
+  <div id="hhmmError" class="error"></div>
 
-    <label for="water_v05">물 1 (v=0.05, mL):</label><br />
-    <input type="tel" id="water_v05" inputmode="numeric" pattern="[0-9]*" tabindex="2" /><br />
+  <label for="water_v05">물 1 (v=0.05, mL):</label><br />
+  <input type="tel" id="water_v05" inputmode="numeric" pattern="[0-9]*" tabindex="2" /><br />
 
-    <label for="water_v20">물 2 (v=0.2, mL):</label><br />
-    <input type="tel" id="water_v20" inputmode="numeric" pattern="[0-9]*" tabindex="3" /><br />
-
-    <button type="submit">계산하기</button>
-  </form>
+  <label for="water_v20">물 2 (v=0.2, mL):</label><br />
+  <input type="tel" id="water_v20" inputmode="numeric" pattern="[0-9]*" tabindex="3" /><br />
 
   <p id="result"></p>
 </body>
