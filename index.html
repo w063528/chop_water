@@ -22,8 +22,13 @@
       const hhmmStr = hhmmRaw.padStart(4, '0');
       const hours = parseInt(hhmmStr.slice(0, 2), 10);
       const minutes = parseInt(hhmmStr.slice(2), 10);
-      const totalTime = hours + minutes / 60;
 
+      if (isNaN(hours) || isNaN(minutes) || minutes >= 60) {
+        document.getElementById("result").innerText = "⚠️ 분(minute)은 0~59 사이여야 합니다.";
+        return;
+      }
+
+      const totalTime = hours + minutes / 60;
       const A = 0.00785; // m², 지름 10cm
       const humidityDiff = 0.012;
 
