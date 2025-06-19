@@ -12,11 +12,9 @@
         if (el) el.value = '';
       });
 
-      // 2. hhmm에 자동 커서 / 3. 일부 iOS에서는 setTimeout으로 팝업 유도
-      setTimeout(() => {
-        const hhmm = document.getElementById('hhmm');
-        if (hhmm) hhmm.focus();
-      }, 300);
+      // 2. hhmm에 자동 커서 (자동 키보드 팝업은 iOS 정책상 불가)
+      const hhmm = document.getElementById('hhmm');
+      if (hhmm) hhmm.focus();
     };
 
     function calculate() {
@@ -52,6 +50,19 @@
       document.getElementById("result").innerText =
         `정춉이 마신 물의 양은 약 ${result}mL 입니다.`;
     }
+
+    // 6. iOS "완료" 버튼으로 계산 실행
+    document.addEventListener('DOMContentLoaded', () => {
+      ['hhmm', 'water_v05', 'water_v20'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', () => {
+            // 사용자가 완료 버튼을 눌렀을 때 계산 수행
+            calculate();
+          });
+        }
+      });
+    });
   </script>
   <style>
     input {
