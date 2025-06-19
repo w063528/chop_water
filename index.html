@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>정춉 마신 물 계산기</title>
+  <title>고양이 마신 물 계산기</title>
   <script>
-    function validateHHMM(raw) {
-      const hhmmStr = raw.padStart(4, '0');
-      const hours = parseInt(hhmmStr.slice(0, 2), 10);
-      const minutes = parseInt(hhmmStr.slice(2), 10);
+    function validateHHMMParts(h, m) {
+      const hours = parseInt(h, 10);
+      const minutes = parseInt(m, 10);
       if (isNaN(hours) || isNaN(minutes) || minutes >= 60) {
         document.getElementById("hhmmError").innerText = "HHMM 중 MM은 0~59 사이여야 합니다.";
         return null;
@@ -18,8 +17,9 @@
     }
 
     function calculateIfReady() {
-      const hhmmVal = document.getElementById("hhmm").value.trim();
-      const totalTime = validateHHMM(hhmmVal);
+      const hh = document.getElementById("hh").value.trim();
+      const mm = document.getElementById("mm").value.trim();
+      const totalTime = validateHHMMParts(hh, mm);
       const v05 = document.getElementById("water_v05").value;
       const v20 = document.getElementById("water_v20").value;
 
@@ -27,13 +27,12 @@
       const hasV05 = v05.trim() !== "";
       const hasV20 = v20.trim() !== "";
 
-      // 조건 만족 안하면 초기화
       if (!hasHHMM || (!hasV05 && !hasV20)) {
         document.getElementById("result").innerText = "";
         return;
       }
 
-      const A = 0.00785; // m², 지름 10cm
+      const A = 0.00785;
       const humidityDiff = 0.012;
 
       let totalLoss = 0;
@@ -60,20 +59,16 @@
       const drink = totalLoss - totalEvap;
       const result = Math.max(0, Math.round(drink * 10) / 10);
       document.getElementById("result").innerText =
-        `정춉이 마신 물의 양은 약 ${result}mL 입니다.`;
+        `고양이가 마신 물의 양은 약 ${result}mL 입니다.`;
     }
 
     window.onload = () => {
-      // 입력 초기화
-      ["hhmm", "water_v05", "water_v20"].forEach(id => {
+      ["hh", "mm", "water_v05", "water_v20"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
 
-      document.getElementById("hhmm").focus();
-
-      // 이벤트 리스너 등록
-      ["hhmm", "water_v05", "water_v20"].forEach(id => {
+      ["hh", "mm", "water_v05", "water_v20"].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           el.addEventListener("input", () => {
@@ -88,28 +83,64 @@
       font-size: 18px;
       padding: 6px;
       margin-bottom: 4px;
-      width: 200px;
+      width: 100px;
     }
     .error {
       color: red;
       font-size: 14px;
       margin-bottom: 10px;
     }
+    .unit {
+      margin-left: 4px;
+      font-size: 16px;
+    }
+    .section {
+      margin-bottom: 10px;
+    }
+    #ad-area {
+      margin-top: 40px;
+      padding: 20px;
+      background: #f0f0f0;
+      text-align: center;
+      height: 100px;
+    }
   </style>
 </head>
 <body>
-  <h2>정춉 마신 물 계산기</h2>
+  <h2>고양이 마신 물 계산기</h2>
 
-  <label for="hhmm">경과 시간 (HHMM):</label><br />
-  <input type="tel" id="hhmm" inputmode="numeric" pattern="[0-9]*" tabindex="1" /><br />
-  <div id="hhmmError" class="error"></div>
+  <div class="section">
+    <label>경과 시간:</label><br />
+    <input type="tel" id="hh" inputmode="numeric" pattern="[0-9]*" placeholder="예: 1" tabindex="1" />
+    <span class="unit">시간</span>
+    <input type="tel" id="mm" inputmode="numeric" pattern="[0-9]*" placeholder="예: 30" tabindex="2" />
+    <span class="unit">분</span><br />
+    <div id="hhmmError" class="error"></div>
+  </div>
 
-  <label for="water_v05">물 1 (v=0.05, mL):</label><br />
-  <input type="tel" id="water_v05" inputmode="numeric" pattern="[0-9]*" tabindex="2" /><br />
+  <div class="section">
+    <label for="water_v05">물 1 (일반적인 장소):</label><br />
+    <input type="tel" id="water_v05" inputmode="numeric" pattern="[0-9]*" placeholder="예: 100" tabindex="3" />
+    <span class="unit">mL</span><br />
+  </div>
 
-  <label for="water_v20">물 2 (v=0.2, mL):</label><br />
-  <input type="tel" id="water_v20" inputmode="numeric" pattern="[0-9]*" tabindex="3" /><br />
+  <div class="section">
+    <label for="water_v20">물 2 (선풍기/제습기/공기청정기와 2m이내의 장소):</label><br />
+    <input type="tel" id="water_v20" inputmode="numeric" pattern="[0-9]*" placeholder="예: 30" tabindex="4" />
+    <span class="unit">mL</span><br />
+  </div>
 
   <p id="result"></p>
+
+  <div class="section">
+    <strong>계산 방법:</strong><br />
+    1. 물을 채워준 후부터 지금까지의 시간을 입력하기><br />
+    2. 물그릇에서 줄어든 물의 양을 입력하기><br />
+    자연적으로 증발하는 양을 물그릇 주변 환경 별로 추정하여 실제로 고양이가 마신 물의 양을 계산합니다.
+  </div>
+
+  <div id="ad-area">
+    <!-- 광고 영역 -->
+  </div>
 </body>
 </html>
